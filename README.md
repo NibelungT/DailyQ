@@ -16,6 +16,19 @@ flutter analyze            # 0 issue
 1. `pub get` 卡住 → `export PUB_HOSTED_URL=https://pub.flutter-io.cn`、`FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn`
 2. `flutter test` 报 `WebSocketException` → 代理拦了本机连接，用 `NO_PROXY=127.0.0.1,localhost flutter test`
 
+## 发布
+
+仓库只放源码，安装包走 Releases，不打进 git 历史。
+
+```bash
+flutter build apk --release --target-platform android-arm64   # 本地出包
+git tag v1.0.0 && git push origin v1.0.0                      # 触发 CI 发布
+```
+
+`.github/workflows/release.yml` 会构建 arm64 包并把 APK 与 SHA-256 附到对应 Release。
+
+要让 CI 用正式签名，在仓库 Secrets 配置四项：`KEYSTORE_BASE64`（keystore 文件的 base64）、`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`。没配置时产出 debug 包，只能自测，**不能覆盖已安装的正式版**。
+
 ## 已实现
 
 | 页面 | 能力 |
