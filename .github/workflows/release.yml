@@ -20,6 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 手动触发时按输入的 tag 取代码，tag 触发时用默认行为
+          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - uses: actions/setup-java@v4
         with:
@@ -64,7 +67,7 @@ jobs:
         id: pack
         run: |
           APK=build/app/outputs/flutter-apk/app-release.apk
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: *//' | tr -d '\r')
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: *//' | tr -d '\r' | tr '+' '-')
           NAME="DailyQ-${VERSION}-arm64.apk"
           cp "$APK" "$NAME"
           SHA=$(sha256sum "$NAME" | cut -d' ' -f1)
@@ -83,6 +86,8 @@ jobs:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: DailyQ ${{ github.event.inputs.tag || github.ref_name }}
           generate_release_notes: true
+          # 没有正式签名时只建草稿，避免把 debug 包直接公开给用户
+          draft: ${{ env.SIGNED != 'release' }}
           files: ${{ steps.pack.outputs.name }}
           body: |
             SHA-256: `${{ steps.pack.outputs.sha }}`
